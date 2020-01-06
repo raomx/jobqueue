@@ -31,7 +31,7 @@ func (w *Worker) start()  {
 			select {
 			case job := <- w.jobChannel:
 				if err := (*job).Todo(); err != nil {
-					log.Fatalf("%v Todo : %v", job, err)
+					log.Printf("%v Todo : %v", job, err)
 				}
 				w.doneChan <- true
 			}
@@ -84,8 +84,8 @@ func (f *Factory) dispatch() {
 }
 
 func (f *Factory)SetAJob(job *Job)  {
+	f.Add(1)
 	go func() {
-		f.Add(1)
 		f.jobQueue <- job
 	}()
 }
