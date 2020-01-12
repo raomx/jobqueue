@@ -27,7 +27,7 @@ func main()  {
 	f.Run()
 	for i := 0; i < 100000; i++ {
 		var sleep jobqueue.Job = &Sleep{i}
-		f.SetAJob(&sleep)
+		f.SetAJob(sleep)
 	}
 
 	f.Wait()
