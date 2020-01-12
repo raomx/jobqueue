@@ -10,16 +10,16 @@ type Job interface {
 }
 
 type Worker struct {
-	workerPool chan chan *Job
-	jobChannel chan *Job
+	workerPool chan chan Job
+	jobChannel chan Job
 	doneChan   chan bool
 	closeChan chan struct{}
 }
 
-func newWorker(workerPool chan chan *Job, doneChan chan bool, closeChan chan struct{}) *Worker {
+func newWorker(workerPool chan chan Job, doneChan chan bool, closeChan chan struct{}) *Worker {
 	return &Worker{
 		workerPool: workerPool,
-		jobChannel: make(chan *Job),
+		jobChannel: make(chan Job),
 		doneChan:   doneChan,
 		closeChan:	closeChan,
 	}
@@ -32,7 +32,7 @@ func (w *Worker) start()  {
 
 			select {
 			case job := <- w.jobChannel:
-				if err := (*job).Todo(); err != nil {
+				if err := job.Todo(); err != nil {
 					log.Printf("%v Todo : %v", job, err)
 				}
 				w.doneChan <- true
@@ -45,8 +45,8 @@ func (w *Worker) start()  {
 
 
 type Factory struct {
-	workerPool	chan chan* Job
-	jobQueue	chan* Job
+	workerPool	chan chan Job
+	jobQueue	chan Job
 	doneChan	chan bool
 	closeChan	chan struct{}
 	maxWorkers	int
@@ -54,8 +54,8 @@ type Factory struct {
 }
 
 func NewFactory(maxWorkers int) *Factory {
-	workerPool := make(chan chan* Job, maxWorkers)
-	jobQueue := make(chan* Job)
+	workerPool := make(chan chan Job, maxWorkers)
+	jobQueue := make(chan Job)
 	doneChan := make(chan bool)
 	closeChan := make(chan struct{})
 	return &Factory{
@@ -84,7 +84,7 @@ func (f *Factory) dispatch() {
 	for  {
 		select {
 		case job := <- f.jobQueue:
-			go func(job *Job) {
+			go func(job Job) {
 				jobChannel := <- f.workerPool
 				jobChannel <- job
 			}(job)
@@ -96,7 +96,7 @@ func (f *Factory) dispatch() {
 	}
 }
 
-func (f *Factory)SetAJob(job *Job)  {
+func (f *Factory)SetAJob(job Job)  {
 	f.Add(1)
 	go func() {
 		f.jobQueue <- job
